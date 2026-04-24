@@ -504,7 +504,7 @@ if __name__ == "__main__":
 
     ##PRODUTOS
 
-    import tkinter as tk
+ import tkinter as tk
 from tkinter import messagebox
 import sqlite3
 import database  # Referenciando seu databaseVs4.db
@@ -512,7 +512,7 @@ import database  # Referenciando seu databaseVs4.db
 class JanelaCadastroProduto(tk.Toplevel):
     def __init__(self, master, dados_produto=None):
         super().__init__(master)
-        self.title("Gerenciar Produto")
+        self.title("Gerenciar Produtos")
         self.geometry("460x600")
         
         # Paleta de Cores
@@ -581,12 +581,12 @@ class JanelaCadastroProduto(tk.Toplevel):
         btn_frame = tk.Frame(main_frame, bg=self.bg_fundo)
         btn_frame.grid(row=8, column=0, columnspan=2, pady=(40, 10))
 
-        self.btn_salvar = tk.Button(btn_frame, text="SALVAR PRODUTO", bg=self.cor_btn_1, fg="white", 
+        self.btn_salvar = tk.Button(btn_frame, text="SALVAR", bg=self.cor_btn_1, fg="white", 
                                    font=("Segoe UI", 10, "bold"), width=35, relief="flat",
                                    cursor="hand2", command=self.salvar)
         self.btn_salvar.pack(pady=5, ipady=8)
 
-        self.btn_sair = tk.Button(main_frame, text="SAIR SEM SALVAR", bg=self.cor_btn_sair, fg="white", 
+        self.btn_sair = tk.Button(main_frame, text="SAIR", bg=self.cor_btn_sair, fg="white", 
                                  font=("Segoe UI", 9, "bold"), width=38, relief="flat",
                                  cursor="hand2", command=self.destroy)
         self.btn_sair.grid(row=9, column=0, columnspan=2, pady=5, ipady=5)
@@ -606,24 +606,48 @@ class JanelaCadastroProduto(tk.Toplevel):
     def salvar(self):
         d = self.coletar_dados()
         
+        # Validação básica
         if not d["produto"] or not d["preco"]:
             messagebox.showwarning("Atenção", "Nome e Preço são obrigatórios.")
             return
 
         try:
+            # Conversão de tipos para evitar erros no banco
             preco_float = float(d["preco"])
             qtd_int = int(d["quantidade"]) if d["quantidade"] else 0
             
-            # Aqui chamamos a função do seu arquivo database.py
-            database.salvar_item(d["produto"], preco_float, qtd_int, d["categoria"], d["status"])
+            # LÓGICA DE ALTERAÇÃO:
+            if self.produto_id:
+                # Se o ID existe, chamamos a função de ATUALIZAR
+                database.atualizar_item(
+                    self.produto_id, 
+                    d["produto"], 
+                    preco_float, 
+                    qtd_int, 
+                    d["categoria"], 
+                    d["status"]
+                )
+                messagebox.showinfo("Sucesso", f"Produto '{d['produto']}' salvo com sucesso!")
+            else:
+                # Se o ID não existe, chamamos a função de SALVAR NOVO
+                database.salvar_item(
+                    d["produto"], 
+                    preco_float, 
+                    qtd_int, 
+                    d["categoria"], 
+                    d["status"]
+                )
+                messagebox.showinfo("Sucesso", f"Produto '{d['produto']}' cadastrado com sucesso!")
             
-            messagebox.showinfo("Sucesso", f"Produto '{d['produto']}' cadastrado como {d['categoria']}!")
+            # Fecha a janela para que a tela principal possa atualizar a lista
             self.destroy()
 
         except ValueError:
             messagebox.showerror("Erro", "Preço e Quantidade devem ser números válidos.")
         except sqlite3.IntegrityError:
-            messagebox.showerror("Erro", "Este produto já está cadastrado.")
+            messagebox.showerror("Erro", "Este produto já está cadastrado (conflito de integridade).")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Ocorreu um erro inesperado: {e}")
 
     def preencher_dados(self, dados):
         """Preenche para edição (id, produto, preco, quantidade, categoria, status)"""
@@ -633,7 +657,7 @@ class JanelaCadastroProduto(tk.Toplevel):
         self.ent_qtd.insert(0, str(dados[3]))
         self.var_categoria.set(dados[4])
         self.var_status.set(dados[5])
-        self.btn_salvar.config(text="ATUALIZAR PRODUTO")
+        self.btn_salvar.config(text="ATUALIZAR")
 
 if __name__ == "__main__":
     root = tk.Tk()
@@ -641,10 +665,9 @@ if __name__ == "__main__":
     JanelaCadastroProduto(root)
     root.mainloop()
 
-
     ###PEDIDOS
 
-    import tkinter as tk
+import tkinter as tk
 from tkinter import messagebox, ttk
 import sqlite3
 import database  # Certifique-se de que o arquivo database.py está na mesma pasta
