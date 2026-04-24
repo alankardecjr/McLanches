@@ -98,6 +98,17 @@ def salvar_item(produto, preco, quantidade, categoria, status='em estoque'):
     finally:
         conn.close()
 
+def atualizar_item(id_item, produto, preco, quantidade, categoria, status):
+    conn = conectar()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            UPDATE itens SET produto=?, preco=?, quantidade=?, categoria=?, status_item=? 
+            WHERE id=?""", (produto, preco, quantidade, categoria, status, id_item))
+        conn.commit()
+    finally:
+        conn.close()
+
 def listar_itens():
     """Retorna todos os itens em ordem alfabética"""
     conn = conectar()

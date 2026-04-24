@@ -100,48 +100,24 @@ class JanelaCadastroProduto(tk.Toplevel):
     def salvar(self):
         d = self.coletar_dados()
         
-        # Validação básica
         if not d["produto"] or not d["preco"]:
             messagebox.showwarning("Atenção", "Nome e Preço são obrigatórios.")
             return
 
         try:
-            # Conversão de tipos para evitar erros no banco
             preco_float = float(d["preco"])
             qtd_int = int(d["quantidade"]) if d["quantidade"] else 0
             
-            # LÓGICA DE ALTERAÇÃO:
-            if self.produto_id:
-                # Se o ID existe, chamamos a função de ATUALIZAR
-                database.atualizar_item(
-                    self.produto_id, 
-                    d["produto"], 
-                    preco_float, 
-                    qtd_int, 
-                    d["categoria"], 
-                    d["status"]
-                )
-                messagebox.showinfo("Sucesso", f"Produto '{d['produto']}' salvo com sucesso!")
-            else:
-                # Se o ID não existe, chamamos a função de SALVAR NOVO
-                database.salvar_item(
-                    d["produto"], 
-                    preco_float, 
-                    qtd_int, 
-                    d["categoria"], 
-                    d["status"]
-                )
-                messagebox.showinfo("Sucesso", f"Produto '{d['produto']}' cadastrado com sucesso!")
+            # Aqui chamamos a função do seu arquivo database.py
+            database.salvar_item(d["produto"], preco_float, qtd_int, d["categoria"], d["status"])
             
-            # Fecha a janela para que a tela principal possa atualizar a lista
+            messagebox.showinfo("Sucesso", f"Produto '{d['produto']}' cadastrado como {d['categoria']}!")
             self.destroy()
 
         except ValueError:
             messagebox.showerror("Erro", "Preço e Quantidade devem ser números válidos.")
         except sqlite3.IntegrityError:
-            messagebox.showerror("Erro", "Este produto já está cadastrado (conflito de integridade).")
-        except Exception as e:
-            messagebox.showerror("Erro", f"Ocorreu um erro inesperado: {e}")
+            messagebox.showerror("Erro", "Este produto já está cadastrado.")
 
     def preencher_dados(self, dados):
         """Preenche para edição (id, produto, preco, quantidade, categoria, status)"""

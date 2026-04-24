@@ -95,8 +95,10 @@ class SistemaJAD:
         
         dados = sorted(database.listar_clientes(), key=lambda x: str(x[1]).lower())
         for c in dados:
-            tag = "inativo" if c[4] == "Inativo" else "prioridade" if c[4] in ["Idoso", "PCD"] else ""
-            self.tree.insert("", "end", values=c, tags=(tag,))
+            endereco = f"{c[3]}, {c[4]} - {c[5]}".strip().replace(" ,", "")
+            status = str(c[8])
+            tag = "inativo" if status == "Inativo" else "prioridade" if status in ["Idoso", "PCD", "PCD/Idoso"] else ""
+            self.tree.insert("", "end", values=(c[0], c[1], c[2], endereco, status), tags=(tag,))
 
     def exibir_pedidos(self):
         self.modo_atual = "pedidos"
@@ -161,15 +163,18 @@ class SistemaJAD:
         for d in dados:
             if termo in str(d[1]).lower() or termo in str(d[2]).lower():
                 if self.modo_atual == "clientes":
-                    status = str(d[4])
-                    tag = "inativo" if status == "Inativo" else "prioridade" if status in ["Idoso", "PCD"] else ""
+                    endereco = f"{d[3]}, {d[4]} - {d[5]}".strip().replace(" ,", "")
+                    status = str(d[8])
+                    tag = "inativo" if status == "Inativo" else "prioridade" if status in ["Idoso", "PCD", "PCD/Idoso"] else ""
+                    self.tree.insert("", "end", values=(d[0], d[1], d[2], endereco, status), tags=(tag,))
                 elif self.modo_atual == "produtos":
                     status = str(d[5])
                     tag = "inativo" if status == "sem estoque" else ""
+                    self.tree.insert("", "end", values=d, tags=(tag,))
                 else:
                     status = str(d[4])
                     tag = "finalizado" if status == "Finalizado" else ""
-                self.tree.insert("", "end", values=d, tags=(tag,))
+                    self.tree.insert("", "end", values=d, tags=(tag,))
 
     def abrir_cadastro(self):
         JanelaCadastroCliente(self.root, callback_pedido=self.abrir_pedido)
