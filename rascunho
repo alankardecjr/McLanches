@@ -91,7 +91,7 @@ class SistemaJAD:
         self.lbl_total.config(text="")
         self.preparar_colunas(("id", "nome", "telefone", "endereco", "status"))
         
-        dados = sorted(database2.listar_clientes(), key=lambda x: str(x[1]).lower())
+        dados = sorted(database.listar_clientes(), key=lambda x: str(x[1]).lower())
         for c in dados:
             tag = "inativo" if c[4] == "Inativo" else "prioridade" if c[4] in ["Idoso", "PCD"] else ""
             self.tree.insert("", "end", values=c, tags=(tag,))
@@ -99,9 +99,9 @@ class SistemaJAD:
     def exibir_pedidos(self):
         self.modo_atual = "pedidos"
         # Ajustado para incluir as colunas de status específicas
-        self.preparar_colunas(("id", "cliente", "valor", "data", "status_pedido", "status"))
+        self.preparar_colunas(("id", "cliente", "valor", "data", "status_pedido"))
         
-        dados = sorted(database2.listar_pedidos(), key=lambda x: str(x[1]).lower())
+        dados = sorted(database.listar_pedidos(), key=lambda x: str(x[1]).lower())
         total = 0
         for p in dados:
             try: total += float(p[2])
@@ -120,12 +120,12 @@ class SistemaJAD:
         dados = self.tree.item(item)["values"]
         
         if self.modo_atual == "clientes":
-            janela = JanelaCadastro(self.root, dados_cliente=dados)
+            janela = JanelaCadastroCliente(self.root, dados_cliente=dados)
             self.root.wait_window(janela)
             self.exibir_clientes()
         else:
             # Ao clicar duas vezes no pedido, abre a janela de pedidos/edição
-            janela = JanelaPedido(self.root) 
+            janela = JanelaCadastroPedidos(self.root) 
             if hasattr(janela, 'top'): self.root.wait_window(janela.top)
             self.exibir_pedidos()
 
@@ -133,21 +133,25 @@ class SistemaJAD:
         termo = self.ent_busca.get().lower()
         self.tree.delete(*self.tree.get_children())
         
-        dados_raw = database2.listar_clientes() if self.modo_atual == "clientes" else database2.listar_pedidos()
+        dados_raw = database.listar_clientes() if self.modo_atual == "clientes" else database.listar_pedidos()
         dados = sorted(dados_raw, key=lambda x: str(x[1]).lower())
 
         for d in dados:
             if termo in str(d[1]).lower() or termo in str(d[2]).lower():
-                status = str(d[4])
-                tag = "inativo" if status == "Inativo" else "finalizado" if status == "Finalizado" else "prioridade" if status in ["Idoso", "PCD"] else ""
+                if self.modo_atual == "clientes":
+                    status = str(d[4])
+                    tag = "inativo" if status == "Inativo" else "prioridade" if status in ["Idoso", "PCD"] else ""
+                else:
+                    status = str(d[4])
+                    tag = "finalizado" if status == "Finalizado" else ""
                 self.tree.insert("", "end", values=d, tags=(tag,))
 
     def abrir_cadastro(self):
-        JanelaCadastro(self.root)
+        JanelaCadastroCliente(self.root)
         self.exibir_clientes()
 
     def abrir_pedido(self):
-        janela = JanelaPedido(self.root)
+        janela = JanelaCadastroPedidos(self.root)
         if hasattr(janela, 'top'): self.root.wait_window(janela.top)
         self.exibir_pedidos()
 

@@ -6,7 +6,7 @@ import database  # Certifique-se de que o arquivo database.py está na mesma pas
 class JanelaCadastroPedidos(tk.Toplevel):
     def __init__(self, master, nome_cliente_inicial=None):
         super().__init__(master)
-        self.title("Gerar Novo Pedido")
+        self.title("Gerar Pedido")
         self.geometry("1000x750") 
         self.configure(bg="#f4f6f9")
         
@@ -103,11 +103,11 @@ class JanelaCadastroPedidos(tk.Toplevel):
                                 font=("Segoe UI", 9, "bold"), width=28, command=self.remover_item, relief="flat", cursor="hand2")
         btn_remover.pack(pady=5, ipady=5)
 
-        btn_pagar = tk.Button(resumo_frame, text="FINALIZAR E PAGAR", bg=self.cinza_escuro, fg="white", 
+        btn_pagar = tk.Button(resumo_frame, text="GERAR PEDIDO", bg=self.cinza_escuro, fg="white", 
                               font=("Segoe UI", 9, "bold"), width=28, command=self.ir_para_pagamento, relief="flat", cursor="hand2")
         btn_pagar.pack(pady=5, ipady=5)
 
-        btn_sair = tk.Button(resumo_frame, text="SAIR SEM SALVAR", bg=self.cinza_claro, fg="white", 
+        btn_sair = tk.Button(resumo_frame, text="SAIR", bg=self.cinza_claro, fg="white", 
                              font=("Segoe UI", 9, "bold"), width=28, command=self.destroy, relief="flat", cursor="hand2")
         btn_sair.pack(pady=5, ipady=5)
 

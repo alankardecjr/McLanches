@@ -4,6 +4,8 @@ import database
 from cadastro_cliente import JanelaCadastroCliente
 from cadastro_produtos import JanelaCadastroProduto
 from cadastro_pedidos import JanelaCadastroPedidos
+
+# Para simplificar, as janelas de cadastro foram unificadas em JanelaCadastro e JanelaPedido
 class SistemaJAD:
     def __init__(self, root):
         self.root = root
@@ -45,11 +47,11 @@ class SistemaJAD:
         }
 
         botoes = [
+            ("Gerar Pedido", self.abrir_pedido),
             ("Novo Cliente", self.abrir_cadastro),
             ("Ver Clientes", self.exibir_clientes),
-            ("Editar", self.editar_selecionado),
+            ("Ver Produtos", self.editar_produtos),
             ("Ver Pedidos", self.exibir_pedidos),
-            ("Gerar Pedido", self.abrir_pedido),
             ("Sair", self.confirmar_saida)
         ]
 
@@ -113,6 +115,16 @@ class SistemaJAD:
             
         self.lbl_total.config(text=f"Total em Vendas: R$ {total:.2f}")
 
+    def editar_produtos(self):
+        self.modo_atual = "produtos"
+        self.lbl_total.config(text="")
+        self.preparar_colunas(("id", "produto", "preco", "quantidade", "categoria", "status_item"))
+        
+        dados = sorted(database.listar_itens(), key=lambda x: str(x[1]).lower())
+        for item in dados:
+            tag = "inativo" if item[5] == "Fora de estoque" else ""
+            self.tree.insert("", "end", values=item, tags=(tag,))
+
     def editar_selecionado(self):
         item = self.tree.selection()
         if not item: return
@@ -123,6 +135,10 @@ class SistemaJAD:
             janela = JanelaCadastroCliente(self.root, dados_cliente=dados)
             self.root.wait_window(janela)
             self.exibir_clientes()
+        elif self.modo_atual == "produtos":
+            janela = JanelaCadastroProduto(self.root, dados_produto=dados)
+            self.root.wait_window(janela)
+            self.editar_produtos()
         else:
             # Ao clicar duas vezes no pedido, abre a janela de pedidos/edição
             janela = JanelaCadastroPedidos(self.root) 
@@ -133,7 +149,13 @@ class SistemaJAD:
         termo = self.ent_busca.get().lower()
         self.tree.delete(*self.tree.get_children())
         
-        dados_raw = database.listar_clientes() if self.modo_atual == "clientes" else database.listar_pedidos()
+        if self.modo_atual == "clientes":
+            dados_raw = database.listar_clientes()
+        elif self.modo_atual == "produtos":
+            dados_raw = database.listar_itens()
+        else:
+            dados_raw = database.listar_pedidos()
+        
         dados = sorted(dados_raw, key=lambda x: str(x[1]).lower())
 
         for d in dados:
@@ -141,6 +163,9 @@ class SistemaJAD:
                 if self.modo_atual == "clientes":
                     status = str(d[4])
                     tag = "inativo" if status == "Inativo" else "prioridade" if status in ["Idoso", "PCD"] else ""
+                elif self.modo_atual == "produtos":
+                    status = str(d[5])
+                    tag = "inativo" if status == "sem estoque" else ""
                 else:
                     status = str(d[4])
                     tag = "finalizado" if status == "Finalizado" else ""

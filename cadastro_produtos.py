@@ -6,7 +6,7 @@ import database  # Referenciando seu databaseVs4.db
 class JanelaCadastroProduto(tk.Toplevel):
     def __init__(self, master, dados_produto=None):
         super().__init__(master)
-        self.title("Gerenciar Produto")
+        self.title("Gerenciar Produtos")
         self.geometry("460x600")
         
         # Paleta de Cores
@@ -75,12 +75,12 @@ class JanelaCadastroProduto(tk.Toplevel):
         btn_frame = tk.Frame(main_frame, bg=self.bg_fundo)
         btn_frame.grid(row=8, column=0, columnspan=2, pady=(40, 10))
 
-        self.btn_salvar = tk.Button(btn_frame, text="SALVAR PRODUTO", bg=self.cor_btn_1, fg="white", 
+        self.btn_salvar = tk.Button(btn_frame, text="SALVAR", bg=self.cor_btn_1, fg="white", 
                                    font=("Segoe UI", 10, "bold"), width=35, relief="flat",
                                    cursor="hand2", command=self.salvar)
         self.btn_salvar.pack(pady=5, ipady=8)
 
-        self.btn_sair = tk.Button(main_frame, text="SAIR SEM SALVAR", bg=self.cor_btn_sair, fg="white", 
+        self.btn_sair = tk.Button(main_frame, text="SAIR", bg=self.cor_btn_sair, fg="white", 
                                  font=("Segoe UI", 9, "bold"), width=38, relief="flat",
                                  cursor="hand2", command=self.destroy)
         self.btn_sair.grid(row=9, column=0, columnspan=2, pady=5, ipady=5)
@@ -127,7 +127,7 @@ class JanelaCadastroProduto(tk.Toplevel):
         self.ent_qtd.insert(0, str(dados[3]))
         self.var_categoria.set(dados[4])
         self.var_status.set(dados[5])
-        self.btn_salvar.config(text="ATUALIZAR PRODUTO")
+        self.btn_salvar.config(text="ATUALIZAR")
 
 if __name__ == "__main__":
     root = tk.Tk()

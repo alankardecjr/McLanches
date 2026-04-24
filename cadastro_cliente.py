@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import sqlite3
-import database  # Certifique-se que o arquivo database.py contém as funções do deliveryVS3.db
+import database  # Certifique-se que o arquivo database.py contém as funções do deliveryVs4.db
 
 class JanelaCadastroCliente(tk.Toplevel):
     def __init__(self, master, dados_cliente=None, callback_pedido=None):
@@ -70,18 +70,18 @@ class JanelaCadastroCliente(tk.Toplevel):
         btn_top_frame = tk.Frame(main_frame, bg=self.bg_fundo)
         btn_top_frame.grid(row=14, column=0, columnspan=2, pady=(30, 10))
 
-        self.btn_salvar = tk.Button(btn_top_frame, text="SALVAR E FECHAR", bg=self.cor_btn_1, fg="white", 
+        self.btn_salvar = tk.Button(btn_top_frame, text="SALVAR", bg=self.cor_btn_1, fg="white", 
                                    font=("Segoe UI", 9, "bold"), width=18, relief="flat",
                                    cursor="hand2", command=self.salvar_e_sair)
         self.btn_salvar.pack(side="left", padx=5, ipady=8)
 
-        self.btn_pedido = tk.Button(btn_top_frame, text="SALVAR E PEDIR", bg=self.cor_btn_2, fg="white", 
+        self.btn_pedido = tk.Button(btn_top_frame, text="PEDIR", bg=self.cor_btn_2, fg="white", 
                                    font=("Segoe UI", 9, "bold"), width=18, relief="flat",
                                    cursor="hand2", command=self.salvar_e_pedir)
         self.btn_pedido.pack(side="left", padx=5, ipady=8)
 
         # Botão Sair (abaixo e centralizado)
-        self.btn_sair_janela = tk.Button(main_frame, text="SAIR SEM SALVAR", bg=self.cor_btn_sair, fg="white", 
+        self.btn_sair_janela = tk.Button(main_frame, text="SAIR", bg=self.cor_btn_sair, fg="white", 
                                         font=("Segoe UI", 9, "bold"), width=38, relief="flat",
                                         cursor="hand2", command=self.fechar_limpar)
         self.btn_sair_janela.grid(row=15, column=0, columnspan=2, pady=5, ipady=5)
@@ -145,7 +145,7 @@ class JanelaCadastroCliente(tk.Toplevel):
         self.ent_ref.insert(0, dados[6])
         self.txt_obs.insert(0, dados[7])
         self.var_status.set(dados[8])
-        self.btn_salvar.config(text="ATUALIZAR DADOS")
+        self.btn_salvar.config(text="ATUALIZAR")
 
 if __name__ == "__main__":
     root = tk.Tk()
