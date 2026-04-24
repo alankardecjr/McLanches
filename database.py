@@ -1,8 +1,8 @@
 import sqlite3
 
 def conectar():
-    """Conecta ao banco de dados deliveryVS3.db"""
-    return sqlite3.connect("deliveryVS3.db")
+    """Conecta ao banco de dados deliveryVs4.db"""
+    return sqlite3.connect("deliveryVs4.db")
 
 def criar_tabelas():
     conn = conectar()
@@ -167,4 +167,4 @@ def atualizar_status_pedido(id_pedido, novo_status):
 
 if __name__ == "__main__":
     criar_tabelas()
-    print("Banco de dados deliveryVS3.db estruturado e atualizado com sucesso!")
+    print("Banco de dados deliveryVs4.db estruturado e atualizado com sucesso!")

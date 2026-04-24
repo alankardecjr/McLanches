@@ -3,12 +3,12 @@ import sqlite3
 import random
 
 def popular_banco():
-    # 1. Garante a criação das tabelas no deliveryVS3.db
+    # 1. Garante a criação das tabelas no deliveryVs4.db
     database.criar_tabelas()
     conn = database.conectar()
     cursor = conn.cursor()
 
-    print("--- Iniciando Povoamento do Banco de Dados VS3 ---")
+    print("--- Iniciando Povoamento do Banco de Dados Vs4 ---")
 
     # --- 50 CLIENTES VARIADOS ---
     nomes_base = ["Ana", "Bruno", "Carla", "Daniel", "Eduarda", "Fabio", "Gisele", "Henrique", "Iara", "João"]
@@ -96,7 +96,7 @@ def popular_banco():
 
     conn.commit()
     conn.close()
-    print("\n✅ Banco de dados 'deliveryVS3.db' populado com sucesso!")
+    print("\n✅ Banco de dados 'deliveryVs4.db' populado com sucesso!")
 
 if __name__ == "__main__":
     popular_banco()

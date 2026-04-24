@@ -150,5 +150,5 @@ class JanelaCadastroCliente(tk.Toplevel):
 if __name__ == "__main__":
     root = tk.Tk()
     root.withdraw() 
-    JanelaCadastro(root)
+    JanelaCadastroCliente(root)
     root.mainloop()

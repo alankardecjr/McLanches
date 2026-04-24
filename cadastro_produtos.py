@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import sqlite3
-import database  # Referenciando seu databaseVS3.db
+import database  # Referenciando seu databaseVs4.db
 
 class JanelaCadastroProduto(tk.Toplevel):
     def __init__(self, master, dados_produto=None):

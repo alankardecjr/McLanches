@@ -1,153 +1,160 @@
-import sqlite3
+import tkinter as tk
+from tkinter import messagebox, ttk
+import database  
+from cadastro_cliente import JanelaCadastroCliente
+from cadastro_produtos import JanelaCadastroProduto
+from cadastro_pedidos import JanelaCadastroPedidos
+class SistemaJAD:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("***** Sistema JAD - SQLite *****")
+        self.root.geometry("1100x700")
+        self.root.configure(bg="#f4f6f9")
+        
+        self.modo_atual = "clientes" 
+        self.setup_ui()
+        
+        # Tags de Cores e Estilo 
+        self.tree.tag_configure('inativo', background="#e0e0e0", foreground='#424242', font=('Arial', 9, 'bold', 'italic', 'overstrike'))
+        self.tree.tag_configure('finalizado', background="#bdc3c7", foreground='white', font=('Arial', 9, 'bold', 'italic', 'overstrike')) 
+        self.tree.tag_configure('prioridade', foreground="#2c3e50", font=('Arial', 11, 'bold', 'italic'))
+        
+        self.exibir_clientes()
 
-def conectar():
-    """Conecta ao banco de dados deliveryVS3.db"""
-    return sqlite3.connect("deliveryVS3.db")
+    def setup_ui(self):
+        tk.Label(self.root, text="--- Controle de Delivery ---", 
+                 font=("Arial", 18, "bold"), bg="#f4f6f9", fg="#333").pack(pady=15)
 
-def criar_tabelas():
-    conn = conectar()
-    cursor = conn.cursor()
-    
-    # 1. Tabela de Produtos (itens)
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS itens (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        produto TEXT UNIQUE NOT NULL,
-        preco REAL NOT NULL,
-        quantidade INTEGER DEFAULT 0,
-        categoria TEXT,
-        status_item TEXT DEFAULT 'em estoque'
-    )""")
+        # Busca
+        frame_busca = tk.Frame(self.root, bg="#f4f6f9")
+        frame_busca.pack(fill="x", padx=40, pady=5)
+        
+        tk.Label(frame_busca, text="Buscar:", bg="#f4f6f9", font=("Arial", 10, "bold")).pack(side="left")
+        self.ent_busca = tk.Entry(frame_busca, font=("Arial", 11), relief="flat", highlightthickness=1, highlightbackground="#ccc")
+        self.ent_busca.pack(side="left", padx=10, fill="x", expand=True)
+        self.ent_busca.bind("<KeyRelease>", self.filtrar_dados) 
 
-    # 2. Tabela de Clientes
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS clientes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        telefone TEXT UNIQUE NOT NULL,
-        logradouro TEXT NOT NULL,
-        numero TEXT,
-        bairro TEXT,
-        ponto_referencia TEXT,
-        observacao TEXT,
-        status_cliente TEXT DEFAULT 'Ativo'
-    )""")
+        # Menu de Botões
+        frame_menu = tk.Frame(self.root, bg="#f4f6f9")
+        frame_menu.pack(pady=15)
+        
+        btn_style = {
+            "width": 15, "height": 2, "bg": "#f4f6f9", "fg": "black", 
+            "font": ("Arial", 9, "bold"), "relief": "flat",
+            "highlightthickness": 1, "highlightbackground": "#d1d1d1", "cursor": "hand2"
+        }
 
-    # 3. Tabela de Pedidos
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS pedidos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        cliente_id INTEGER NOT NULL,
-        valor_total REAL NOT NULL,
-        data TEXT DEFAULT (datetime('now', 'localtime')),
-        status_pedido TEXT DEFAULT 'pendente',
-        FOREIGN KEY (cliente_id) REFERENCES clientes (id)
-    )""")
-    
-    conn.commit()
-    conn.close()
+        botoes = [
+            ("Novo Cliente", self.abrir_cadastro),
+            ("Ver Clientes", self.exibir_clientes),
+            ("Editar", self.editar_selecionado),
+            ("Ver Pedidos", self.exibir_pedidos),
+            ("Gerar Pedido", self.abrir_pedido),
+            ("Sair", self.confirmar_saida)
+        ]
 
-# --- GESTÃO DE CLIENTES ---
+        for i, (texto, comando) in enumerate(botoes):
+            btn = tk.Button(frame_menu, text=texto, command=comando, **btn_style)
+            btn.grid(row=0, column=i, padx=5)
+            btn.bind("<Enter>", lambda e, b=btn: b.config(bg="#e2e6ea"))
+            btn.bind("<Leave>", lambda e, b=btn: b.config(bg="#f4f6f9"))
 
-def salvar_cliente(nome, telefone, logradouro, numero, bairro, referencia, obs, status='Ativo'):
-    conn = conectar()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("""
-            INSERT INTO clientes (nome, telefone, logradouro, numero, bairro, ponto_referencia, observacao, status_cliente) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", 
-            (nome, telefone, logradouro, numero, bairro, referencia, obs, status))    
-        conn.commit()
-    finally:
-        conn.close()
+        # Tabela (Treeview)
+        self.tree_frame = tk.Frame(self.root, bg="white")
+        self.tree_frame.pack(fill="both", expand=True, padx=40, pady=5)
 
-def listar_clientes():
-    """Retorna todos os clientes para o main.py"""
-    conn = conectar()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM clientes ORDER BY nome ASC")
-    dados = cursor.fetchall()
-    conn.close()
-    return dados
+        self.tree = ttk.Treeview(self.tree_frame, selectmode="browse", show="headings")
+        self.tree.pack(side="left", fill="both", expand=True)
+        
+        # Vincular DUPLO CLIQUE para editar
+        self.tree.bind("<Double-1>", lambda e: self.editar_selecionado())
+        
+        scrol = ttk.Scrollbar(self.tree_frame, orient="vertical", command=self.tree.yview)
+        scrol.pack(side="right", fill="y")
+        self.tree.configure(yscrollcommand=scrol.set)
 
-def atualizar_cliente(id_cliente, nome, telefone, logra, num, bairro, ref, obs, status):
-    conn = conectar()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("""
-            UPDATE clientes SET nome=?, telefone=?, logradouro=?, numero=?, bairro=?, 
-            ponto_referencia=?, observacao=?, status_cliente=? WHERE id=?""",
-            (nome, telefone, logra, num, bairro, ref, obs, status, id_cliente))
-        conn.commit()
-    finally:
-        conn.close()
+        self.lbl_total = tk.Label(self.root, text="", font=("Arial", 11, "bold"), bg="#f4f6f9", fg="#2c3e50")
+        self.lbl_total.pack(pady=10)
 
-# --- GESTÃO DE PRODUTOS (ITENS) ---
+    def preparar_colunas(self, colunas):
+        """Reconfigura as colunas da Treeview"""
+        self.tree.delete(*self.tree.get_children())
+        self.tree["columns"] = colunas
+        for col in colunas:
+            header = col.replace("_", " ").title()
+            self.tree.heading(col, text=header, anchor="center")
+            self.tree.column(col, width=150, anchor="center")
+        self.tree.column(colunas[0], width=50) 
 
-def salvar_item(produto, preco, quantidade, categoria, status='em estoque'):
-    conn = conectar()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("""
-            INSERT INTO itens (produto, preco, quantidade, categoria, status_item) 
-            VALUES (?, ?, ?, ?, ?)""", (produto, preco, quantidade, categoria, status))
-        conn.commit()
-    finally:
-        conn.close()
+    def exibir_clientes(self):
+        self.modo_atual = "clientes"
+        self.lbl_total.config(text="")
+        self.preparar_colunas(("id", "nome", "telefone", "endereco", "status"))
+        
+        dados = sorted(database2.listar_clientes(), key=lambda x: str(x[1]).lower())
+        for c in dados:
+            tag = "inativo" if c[4] == "Inativo" else "prioridade" if c[4] in ["Idoso", "PCD"] else ""
+            self.tree.insert("", "end", values=c, tags=(tag,))
 
-def listar_itens():
-    """Retorna todos os itens para o main.py"""
-    conn = conectar()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM itens ORDER BY produto ASC")
-    dados = cursor.fetchall()
-    conn.close()
-    return dados
+    def exibir_pedidos(self):
+        self.modo_atual = "pedidos"
+        # Ajustado para incluir as colunas de status específicas
+        self.preparar_colunas(("id", "cliente", "valor", "data", "status_pedido", "status"))
+        
+        dados = sorted(database2.listar_pedidos(), key=lambda x: str(x[1]).lower())
+        total = 0
+        for p in dados:
+            try: total += float(p[2])
+            except: pass
+            
+            # Tag baseada no status do pedido (p[4])
+            tag = "finalizado" if p[4] == "Finalizado" else ""
+            self.tree.insert("", "end", values=p, tags=(tag,))
+            
+        self.lbl_total.config(text=f"Total em Vendas: R$ {total:.2f}")
 
-# --- GESTÃO DE PEDIDOS ---
+    def editar_selecionado(self):
+        item = self.tree.selection()
+        if not item: return
+        
+        dados = self.tree.item(item)["values"]
+        
+        if self.modo_atual == "clientes":
+            janela = JanelaCadastro(self.root, dados_cliente=dados)
+            self.root.wait_window(janela)
+            self.exibir_clientes()
+        else:
+            # Ao clicar duas vezes no pedido, abre a janela de pedidos/edição
+            janela = JanelaPedido(self.root) 
+            if hasattr(janela, 'top'): self.root.wait_window(janela.top)
+            self.exibir_pedidos()
 
-def listar_pedidos():
-    """Retorna lista simplificada de pedidos para a Treeview do Main"""
-    conn = conectar()
-    cursor = conn.cursor()
-    query = """
-    SELECT p.id, c.nome, p.valor_total, p.data, p.status_pedido
-    FROM pedidos p
-    JOIN clientes c ON p.cliente_id = c.id
-    ORDER BY p.id DESC
-    """
-    cursor.execute(query)
-    dados = cursor.fetchall()
-    conn.close()
-    return dados
+    def filtrar_dados(self, event):
+        termo = self.ent_busca.get().lower()
+        self.tree.delete(*self.tree.get_children())
+        
+        dados_raw = database2.listar_clientes() if self.modo_atual == "clientes" else database2.listar_pedidos()
+        dados = sorted(dados_raw, key=lambda x: str(x[1]).lower())
 
-def listar_pedidos_detalhados():
-    """Retorna pedidos com informações completas de endereço"""
-    conn = conectar()
-    cursor = conn.cursor()
-    query = """
-    SELECT p.id, c.nome, p.valor_total, p.data, p.status_pedido, 
-           c.status_cliente, c.logradouro, c.bairro
-    FROM pedidos p
-    JOIN clientes c ON p.cliente_id = c.id 
-    ORDER BY p.id DESC
-    """
-    cursor.execute(query)
-    dados = cursor.fetchall()
-    conn.close()
-    return dados
+        for d in dados:
+            if termo in str(d[1]).lower() or termo in str(d[2]).lower():
+                status = str(d[4])
+                tag = "inativo" if status == "Inativo" else "finalizado" if status == "Finalizado" else "prioridade" if status in ["Idoso", "PCD"] else ""
+                self.tree.insert("", "end", values=d, tags=(tag,))
 
-def atualizar_status_pedido(id_pedido, novo_status):
-    conn = conectar()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("UPDATE pedidos SET status_pedido = ? WHERE id = ?", (novo_status, id_pedido))
-        conn.commit()
-    finally:
-        conn.close()
+    def abrir_cadastro(self):
+        JanelaCadastro(self.root)
+        self.exibir_clientes()
 
-# --- INICIALIZAÇÃO ---
+    def abrir_pedido(self):
+        janela = JanelaPedido(self.root)
+        if hasattr(janela, 'top'): self.root.wait_window(janela.top)
+        self.exibir_pedidos()
+
+    def confirmar_saida(self):
+        if messagebox.askyesno("Sair", "Deseja encerrar o sistema?"): self.root.destroy()
 
 if __name__ == "__main__":
-    criar_tabelas()
-    print("Banco de dados deliveryVS3.db estruturado com sucesso!")
+    root = tk.Tk()
+    app = SistemaJAD(root)
+    root.mainloop()
