@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import sqlite3
-import database  # Certifique-se que o arquivo database.py contém as funções do deliveryVs4.db
+import database  # Certifique-se que o arquivo database.py contém as funções do deliveryVS3.db
 
 class JanelaCadastroCliente(tk.Toplevel):
     def __init__(self, master, dados_cliente=None, callback_pedido=None):

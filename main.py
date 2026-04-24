@@ -24,7 +24,7 @@ class SistemaJAD:
         self.exibir_clientes()
 
     def setup_ui(self):
-        tk.Label(self.root, text="--- Controle de Delivery ---", 
+        tk.Label(self.root, text="--- McLanches Delivery ---", 
                  font=("Arial", 18, "bold"), bg="#f4f6f9", fg="#333").pack(pady=15)
 
         # Busca
@@ -132,7 +132,7 @@ class SistemaJAD:
         dados = self.tree.item(item)["values"]
         
         if self.modo_atual == "clientes":
-            janela = JanelaCadastroCliente(self.root, dados_cliente=dados)
+            janela = JanelaCadastroCliente(self.root, dados_cliente=dados, callback_pedido=self.abrir_pedido)
             self.root.wait_window(janela)
             self.exibir_clientes()
         elif self.modo_atual == "produtos":
@@ -172,11 +172,11 @@ class SistemaJAD:
                 self.tree.insert("", "end", values=d, tags=(tag,))
 
     def abrir_cadastro(self):
-        JanelaCadastroCliente(self.root)
+        JanelaCadastroCliente(self.root, callback_pedido=self.abrir_pedido)
         self.exibir_clientes()
 
-    def abrir_pedido(self):
-        janela = JanelaCadastroPedidos(self.root)
+    def abrir_pedido(self, nome_cliente=None):
+        janela = JanelaCadastroPedidos(self.root, nome_cliente_inicial=nome_cliente)
         if hasattr(janela, 'top'): self.root.wait_window(janela.top)
         self.exibir_pedidos()
 
