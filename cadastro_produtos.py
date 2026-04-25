@@ -7,7 +7,7 @@ class JanelaCadastroProduto(tk.Toplevel):
     def __init__(self, master, dados_produto=None):
         super().__init__(master)
         self.title("McLanches Delivery")
-        self.geometry("460x700")  # Ajustado para manter proporção
+        self.geometry("460x500")  # Ajustado para manter proporção
         self.resizable(False, False)
         
         # Paleta de Cores Padronizada
@@ -76,7 +76,7 @@ class JanelaCadastroProduto(tk.Toplevel):
                                    highlightbackground=self.cor_borda, font=("Segoe UI", 10), cursor="hand2")
         self.opt_categoria.grid(row=4, column=0, columnspan=2, sticky="ew")
 
-        # Preço e Estoque
+        # Preço e Quantidade em Estoque
         self.ent_preco = criar_campo(main_frame, "PREÇO (R$)", 5, col=0, colspan=1)
         self.ent_qtd = criar_campo(main_frame, "QTD EM ESTOQUE", 5, col=1, colspan=1)
 
