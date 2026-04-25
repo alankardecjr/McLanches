@@ -1,7 +1,6 @@
 import sqlite3
 
 def conectar():
-    """Conecta ao banco de dados deliveryVs4.db"""
     return sqlite3.connect("deliveryVs4.db")
 
 def criar_tabelas():
@@ -9,7 +8,7 @@ def criar_tabelas():
     cursor = conn.cursor()
     
     try:
-        # 1. Tabela de Produtos (itens)
+        # 1. Itens/Produtos
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS itens (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,7 +19,7 @@ def criar_tabelas():
             status_item TEXT DEFAULT 'em estoque'
         )""")
 
-        # 2. Tabela de Clientes
+        # 2. Clientes
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS clientes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,7 +33,7 @@ def criar_tabelas():
             status_cliente TEXT DEFAULT 'Ativo'
         )""")
 
-        # 3. Tabela de Pedidos
+        # 3. Pedidos (Cabeçalho)
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS pedidos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,13 +41,95 @@ def criar_tabelas():
             valor_total REAL NOT NULL,
             data TEXT DEFAULT (datetime('now', 'localtime')),
             status_pedido TEXT DEFAULT 'pendente',
-            status_cliente TEXT,
             FOREIGN KEY (cliente_id) REFERENCES clientes (id)
+        )""")
+
+        # 4. ITENS DO PEDIDO (Melhoria 1: Relacionamento Muitos-para-Muitos)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS itens_pedido (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pedido_id INTEGER NOT NULL,
+            item_id INTEGER NOT NULL,
+            quantidade_vendida INTEGER NOT NULL,
+            preco_unitario REAL NOT NULL,
+            FOREIGN KEY (pedido_id) REFERENCES pedidos (id),
+            FOREIGN KEY (item_id) REFERENCES itens (id)
         )""")
         
         conn.commit()
     finally:
         conn.close()
+
+# --- GESTÃO DE ESTOQUE E VENDAS (Melhoria 2) ---
+
+def registrar_pedido_completo(cliente_id, lista_produtos):
+    """
+    lista_produtos deve ser uma lista de tuplas: [(item_id, qtde, preco_un), ...]
+    Realiza a venda e baixa o estoque em uma única transação.
+    """
+    conn = conectar()
+    cursor = conn.cursor()
+    valor_total = sum(p[1] * p[2] for p in lista_produtos)
+    
+    try:
+        # Inserir cabeçalho do pedido
+        cursor.execute("INSERT INTO pedidos (cliente_id, valor_total) VALUES (?, ?)", 
+                       (cliente_id, valor_total))
+        pedido_id = cursor.lastrowid
+
+        for item_id, qtde, preco in lista_produtos:
+            # Inserir na tabela de itens do pedido
+            cursor.execute("""
+                INSERT INTO itens_pedido (pedido_id, item_id, quantidade_vendida, preco_unitario)
+                VALUES (?, ?, ?, ?)""", (pedido_id, item_id, qtde, preco))
+            
+            # Baixa automática no estoque
+            cursor.execute("""
+                UPDATE itens 
+                SET quantidade = quantidade - ? 
+                WHERE id = ?""", (qtde, item_id))
+            
+            # Atualizar status se chegar a zero
+            cursor.execute("""
+                UPDATE itens SET status_item = 'esgotado' 
+                WHERE id = ? AND quantidade <= 0""", (item_id,))
+
+        conn.commit()
+        return True, pedido_id
+    except Exception as e:
+        conn.rollback()
+        return False, str(e)
+    finally:
+        conn.close()
+
+# --- BUSCAS E FILTROS (Melhoria 3) ---
+
+def buscar_cliente_por_telefone(telefone):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM clientes WHERE telefone = ?", (telefone,))
+    cliente = cursor.fetchone()
+    conn.close()
+    return cliente
+
+def filtrar_pedidos_por_status(status):
+    conn = conectar()
+    cursor = conn.cursor()
+    query = """
+    SELECT p.id, c.nome, p.valor_total, p.status_pedido 
+    FROM pedidos p
+    JOIN clientes c ON p.cliente_id = c.id
+    WHERE p.status_pedido = ?
+    ORDER BY p.id DESC
+    """
+    cursor.execute(query, (status,))
+    dados = cursor.fetchall()
+    conn.close()
+    return dados
+
+# --- FUNÇÕES ORIGINAIS MANTIDAS/OTIMIZADAS ---
+# (Manter aqui as funções salvar_cliente, salvar_item, listar_itens, etc.)
+
 
 # --- GESTÃO DE CLIENTES ---
 

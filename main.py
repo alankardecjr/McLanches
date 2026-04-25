@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 import database  
-from cadastro_cliente import JanelaCadastroCliente
-from cadastro_produtos import JanelaCadastroProduto
+from cadastro_clientes import JanelaCadastroClientes
+from cadastro_produtos import JanelaCadastroProdutos
 from cadastro_pedidos import JanelaCadastroPedidos
 
 # Para simplificar, as janelas de cadastro foram unificadas em JanelaCadastro e JanelaPedido
@@ -47,7 +47,7 @@ class SistemaJAD:
         }
 
         botoes = [
-            ("Gerar Pedido", self.abrir_pedido),
+            ("Novo Pedido", self.abrir_pedido),
             ("Novo Cliente", self.abrir_cadastro),
             ("Ver Clientes", self.exibir_clientes),
             ("Ver Produtos", self.editar_produtos),
@@ -134,11 +134,11 @@ class SistemaJAD:
         dados = self.tree.item(item)["values"]
         
         if self.modo_atual == "clientes":
-            janela = JanelaCadastroCliente(self.root, dados_cliente=dados, callback_pedido=self.abrir_pedido)
+            janela = JanelaCadastroClientes(self.root, dados_cliente=dados, callback_pedido=self.abrir_pedido)
             self.root.wait_window(janela)
             self.exibir_clientes()
         elif self.modo_atual == "produtos":
-            janela = JanelaCadastroProduto(self.root, dados_produto=dados)
+            janela = JanelaCadastroProdutos(self.root, dados_produto=dados)
             self.root.wait_window(janela)
             self.editar_produtos()
         else:
