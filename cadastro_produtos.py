@@ -3,7 +3,7 @@ from tkinter import messagebox
 import sqlite3
 import database 
 
-class JanelaCadastroProduto(tk.Toplevel):
+class JanelaCadastroProdutos(tk.Toplevel):
     def __init__(self, master, dados_produto=None):
         super().__init__(master)
         self.title("McLanches Delivery")
@@ -158,5 +158,5 @@ class JanelaCadastroProduto(tk.Toplevel):
 if __name__ == "__main__":
     root = tk.Tk()
     root.withdraw()
-    JanelaCadastroProduto(root)
+    JanelaCadastroProdutos(root)
     root.mainloop()
