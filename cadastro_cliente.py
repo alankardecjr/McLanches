@@ -7,7 +7,7 @@ class JanelaCadastroCliente(tk.Toplevel):
     def __init__(self, master, dados_cliente=None, callback_pedido=None):
         super().__init__(master)
         self.title("McLanches Delivery")
-        self.geometry("460x760") 
+        self.geometry("460x720") 
         self.resizable(False, False)
         
         # Paleta de Cores
